@@ -1,0 +1,87 @@
+---
+title: "Example run"
+output: github_document
+date: "2024-10-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Running DBPM for a single grid cell
+
+This example script steps through the BIPOLE workflow but only using the inputs, obtained from Earth system model (ESM) outputs, for a single grid cell. In example 1, we show how the original code for DBPM can be used. In example 2 we show how the same workflow and a *DBPM-like* model can be implemented in mizer, which opens up the possibility to assess a wider range of marine ecosystem model structural uncertainties and to test/benchmark the performance in terms of computational time.
+
+### Step 1 - Inputs
+
+DBPM request inputs for a few of the ESMs to carry out climate change simulations.
+
+```{r}
+
+## Let's make some up for now 
+
+# Physical variables:
+tos = 20
+tob=10
+deptho=100
+
+# BGC variables:
+# lphy = diatoms + diazotrophs (phydiat + phymisc)
+# sphy = picophytoplankton
+
+question:
+sphy = phyc - (phydiat + phymisc)
+
+# Get plankton size spectrum slope and intercept
+
+slope=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth,output="slope")
+
+intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth,output="intercept")
+
+```
+
+### Step 2 - Create plankton size spectrum inputs
+
+```{r}
+## Read in grid of historical (time-sliced) outputs, UK-ESM. 
+
+
+
+
+
+
+```
+
+### Step 3 - Set up and run model
+
+### 
+
+```{r}
+## Read in grid of historical (time-sliced) outputs, UK-ESM. 
+
+
+
+
+
+
+```
+
+### 
+
+### Step 4 - Save required outputs for plotting and analysis
+
+### 
+
+```{r}
+## Read in grid of historical (time-sliced) outputs, UK-ESM. 
+
+
+
+
+
+
+```
+
+### 
+
+### 
