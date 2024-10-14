@@ -8,7 +8,13 @@ date: "2024-10-08"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Running DBPM for a single grid cell
+title: "Example run" output: github_document date: "2024-10-08" ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# PART A. Running DBPM for a single grid cell
 
 This example script steps through the BIPOLE workflow but only using the inputs, obtained from Earth system model (ESM) outputs, for a single grid cell. In example 1, we show how the original code for DBPM can be used. In example 2 we show how the same workflow and a *DBPM-like* model can be implemented in mizer, which opens up the possibility to assess a wider range of marine ecosystem model structural uncertainties and to test/benchmark the performance in terms of computational time.
 
@@ -18,37 +24,43 @@ DBPM request inputs for a few of the ESMs to carry out climate change simulation
 
 ```{r}
 
-## Let's make some up for now 
+## Let's make some up for now  based on IPSL
+source("/homevol/julia/R/FISHMIP/DBPM-BIOPOLE/DBPM-BIOPOLE/dbpm/sizebased_model_functions.R")
+
 
 # Physical variables:
-tos = 20
-tob=10
+
+tos = 5.21251488
+tob=-1.920627 
 deptho=100
 
 # BGC variables:
 # lphy = diatoms + diazotrophs (phydiat + phymisc)
 # sphy = picophytoplankton
 
-question:
-sphy = phyc - (phydiat + phymisc)
+#get ipsl inputs for 3b - file below is called pp, just read in first row of historical
+#load("/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/IPSL-CM6A-LR_historical.RData")
 
-# Get plankton size spectrum slope and intercept
+sphy = 0.2179258
+lphy=0.3740201
 
-slope=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth,output="slope")
 
-intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth,output="intercept")
 
 ```
 
 ### Step 2 - Create plankton size spectrum inputs
 
 ```{r}
-## Read in grid of historical (time-sliced) outputs, UK-ESM. 
 
+# Get plankton size spectrum slope and intercept
 
+old<-GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25)
 
+slope=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth,output="slope")
 
+intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth,output="intercept")
 
+er=getExportRatio(sphy,lphy,depth=deptho,sst=tos)
 
 ```
 
@@ -57,9 +69,37 @@ intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,
 ### 
 
 ```{r}
-## Read in grid of historical (time-sliced) outputs, UK-ESM. 
+## Set up params (old code used here)
 
+params<-sizeparam(equilibrium=T, dx=0.1,xmin=-12,xmax=6,xmin.consumer.u=-3,xmin.consumer.v=-3.5,tmax=300, delta_t=1/365,fmort.u =0.0,fminx.u=1, fmort.v = 0.0,fminx.v=1,depth=50,er=0.5,pp=-1,slope=-1)
 
+result_set <- sizemodel(params,pp=-2.2,bio.det=0.2,sst=tos,sft=tob) 
+
+# # set up parameters
+# params <- sizeparam(equilibrium = TRUE
+#                         ,dx = 0.1
+#                         ,xmin.consumer.u = -3
+#                         ,xmin.consumer.v = -3
+#                         ,tmax = 100
+#                         ,tstepspryr  =  12
+#                         ,fmort.u = 0.0
+#                         ,fminx.u = 0
+#                         ,fmort.v = 0.0
+#                         ,fminx.v = -1
+#                         ,depth = deptho
+#                         ,er = er
+#                         ,pp = intercept
+#                         ,slope = slope
+#                         ,sst = tos
+#                         ,sft = tob
+#                         ,lat = NA
+#                         ,lon = NA
+#                         ,use.init = FALSE
+#                         ,U.initial = NA 
+#                         ,V.initial = NA   
+#                         ,W.initial = NA)       
+# # run model through time
+# result_set <- sizemodel(params=params) 
 
 
 
@@ -73,16 +113,10 @@ intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,
 ### 
 
 ```{r}
-## Read in grid of historical (time-sliced) outputs, UK-ESM. 
-
-
-
-
-
-
+plotsizespectrum(result_set,params)
 ```
 
-### Try this with mizerReef (Beese et al. 2024)
+# PART B. Try this with mizerReef (Beese et al. 2024)
 
 ```{r}
 remotes::install_github("cmbeese/mizerReef")
@@ -145,4 +179,3 @@ plotSpectra2(dbpm,dbpm_fishing)
 
 
 ```
-
