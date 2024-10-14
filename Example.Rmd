@@ -12,6 +12,8 @@ title: "Example run" output: github_document date: "2024-10-08" ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
 ```
 
 # PART A. Running DBPM for a single grid cell
@@ -24,24 +26,31 @@ DBPM request inputs for a few of the ESMs to carry out climate change simulation
 
 ```{r}
 
-## Let's make some up for now  based on IPSL
+#Get ipsl monthly inputs for 3b - file below is called pp, just read in first row of historical
+
+ load("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/IPSL-CM6A-LR_historical.RData")
+
+
+ inputs<- pp %>% filter(lon==15,lat==-40.5)
+ 
+ rm(pp)
+ 
+
+## OR make some up for now  based on IPSL
 
 
 # Physical variables:
 
-tos = 5.21251488
-tob=-1.920627 
-deptho=100
-
-# BGC variables:
-# lphy = diatoms + diazotrophs (phydiat + phymisc)
-# sphy = picophytoplankton
-
-#get ipsl inputs for 3b - file below is called pp, just read in first row of historical
-#load("/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/IPSL-CM6A-LR_historical.RData")
-
-sphy = 0.2179258
-lphy=0.3740201
+# tos = 13.96293 
+# tob=-0.05683944
+# deptho=2776.039
+# 
+# # BGC variables:
+# # lphy = diatoms + diazotrophs (phydiat + phymisc)
+# # sphy = picophytoplankton
+# 
+# sphy = 0.1400772
+# lphy=0.05363183
 
 
 
@@ -54,20 +63,15 @@ lphy=0.3740201
 # source model functions
 source("/homevol/julia/R/FISHMIP/DBPM-BIOPOLE/DBPM-BIOPOLE/dbpm/dynamic_sizebased_model_functions.R")
 
-#read first 10 rows of inputs
-
-load("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/IPSL-CM6A-LR_historical.RData")[1:10,]
-
-inputs <- readRDS("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/historical/grid_10895_IPSL-CM6A-LR_historical.rds")
-  
-
 # Get plankton size spectrum slope and intercept (already run on above, see)
 
-# slope=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,deptho,output="slope")
+slope=GetPPIntSlope(inputs$sphy,inputs$lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth=2776.039,output="slope")
 
-#intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,deptho,output="intercept")
+intercept=GetPPIntSlope(inputs$sphy,inputs$lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth=2776.039,output="intercept")
 
-#er=getExportRatio(sphy,lphy,depth=deptho,sst=tos)
+er=getExportRatio(inputs$sphy,inputs$lphy,depth=2776.039,sst=inputs$sst)
+
+inputs$depth<-2776.039
 
 ```
 
@@ -76,6 +80,11 @@ inputs <- readRDS("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/I
 ### 
 
 ```{r}
+
+# if below does not run, work with pre-processed weekly inputs for a single grid  cell
+
+inputs <- readRDS("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/historical/grid_10895_IPSL-CM6A-LR_historical.rds")
+
 ## Set up params 
     params <- sizeparam(equilibrium = TRUE
                         ,dx = 0.1
