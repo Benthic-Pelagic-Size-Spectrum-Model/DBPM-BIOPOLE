@@ -82,6 +82,67 @@ intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,
 
 ```
 
-### 
+### Try this with mizerReef (Beese et al. 2024)
 
-### 
+```{r}
+remotes::install_github("cmbeese/mizerReef")
+install.packages("remotes")
+```
+
+Set up simple DPBM model
+
+```{r}
+# Load MizerReef package
+library(mizerReef)
+library(mizer)
+library(mizerExperimental)
+
+# Store MizerParams object from package in local environment
+group_params<-data.frame(species=c("pel_predators","ben_detritivores"),l_max=c(1000,500),a=c(0.025,0.025),b=c(3,3),k_vb=c(0.4,0.6),biomass_observed=c(100,50),biomass_cutoff=c(3,3),refuge_user=c(F,F),bad_pred=c(F,F),interaction_resource=c(1.0,0.1),interaction_algae=c(0.1,0.1),interaction_detritus=c(0.1,1),satiation=c(F,F))
+inter<-rbind(c(0.5,0.5),c(0,0))
+refuge<- data.frame(L_refuge = 10, prop_protect = 0.95)
+
+## Set model ----------------------------------------
+  
+params<-newReefParams(group_params,interaction=inter,method="sigmoidal",method_params =refuge,degrade=FALSE)
+
+#check interactions
+params@interaction
+
+
+# getting an error about degrade so overwriting
+params@other_params$degrade <-FALSE
+getReproductionLevel(params)
+
+## set density dependent of reproduction ----------------
+rdi <- rep(0.9, dim(group_params)[1])
+params <- setBevertonHolt(params, reproduction_level = rdi)
+
+## Project to first steady state -------------------------------
+params <- params |>
+      reefSteady() |> reefSteady() |> reefSteady() |> reefSteady() |>
+      reefSteady() |> reefSteady()
+
+## Calibrate biomasses and growth ---------------------------------
+  # Match observed species group biomasses
+  params <- calibrateReefBiomass(params)
+ # params <- matchBiomasses(params)
+  params <- reefSteady(params)
+  
+
+## Summary plots
+   dbpm <- reefSteady(params,return_sim = T)
+plotBiomass(dbpm)
+plotProductivity(params)
+plotRelativeContribution(params)
+plotDetritusProduction(params)
+
+
+## Fish the model
+dbpm  <- project(params,effort=0,t_max=100)
+dbpm_fishing  <- project(params,effort=0.8,t_max=100)
+plotSpectra2(dbpm,dbpm_fishing)
+
+
+```
+
