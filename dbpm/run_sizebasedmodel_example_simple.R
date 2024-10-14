@@ -23,8 +23,6 @@
 #-------------------------------------------------------------------------------------
 
 
-setwd("/Users/julia/Dropbox/global f/Global model/simple example for Mike/")
-
 source('sizebased_model_functions.r')    # Read all functions of size based model
 
 
@@ -162,11 +160,11 @@ points(params$x[params$ref.det:params$Nx],res$V[params$ref.det:params$Nx,params$
 
 
 # based on mortality fluxes, although here predation moratality only so not quite complete.
- totProd<-colSums(10^x[ref:end]*PM.u[ref:end,]*U[ref:end,]*dx)
+ totProd<-colSums(10^params$x[params$ref:params$Nx]*res$PM.u[params$ref:params$Nx,]*res$U[params$ref:params$Nx,]*params$dx)
 
 
 #  based on growth fluxes [roughly same as the equation from Law et al. 2012]
- totProd<-colSums(10^x[ref:end]*GG.u[ref:end,]*U[ref:end,]*dx)
+ totProd<-colSums(10^params$x[params$ref:params$Nx]*res$GG.u[params$ref:params$Nx,]*res$U[params$ref:params$Nx,]*params$dx)
 
 
 
