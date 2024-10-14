@@ -61,10 +61,9 @@ load("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/I
 inputs <- readRDS("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/historical/grid_10895_IPSL-CM6A-LR_historical.rds")
   
 
-
 # Get plankton size spectrum slope and intercept (already run on above, see)
 
-#slope=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,deptho,output="slope")
+# slope=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,deptho,output="slope")
 
 #intercept=GetPPIntSlope(sphy,lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,deptho,output="intercept")
 
