@@ -35,6 +35,7 @@ DBPM request inputs for a few of the ESMs to carry out climate change simulation
  
  rm(pp)
  
+ inputs$year<-rep(1850:2014,each= 12)
 
 ## OR make some up for now  based on IPSL
 
@@ -65,11 +66,11 @@ source("/homevol/julia/R/FISHMIP/DBPM-BIOPOLE/DBPM-BIOPOLE/dbpm/dynamic_sizebase
 
 # Get plankton size spectrum slope and intercept (already run on above, see)
 
-slope=GetPPIntSlope(inputs$sphy,inputs$lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth=2776.039,output="slope")
+inputs$slope=GetPPIntSlope(inputs$sphy,inputs$lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth=2776.039,output="slope")
 
-intercept=GetPPIntSlope(inputs$sphy,inputs$lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth=2776.039,output="intercept")
+inputs$intercept=GetPPIntSlope(inputs$sphy,inputs$lphy,mmin=10^-14.25, mmid=10^-10.184,mmax=10^-5.25,depth=2776.039,output="intercept")
 
-er=getExportRatio(inputs$sphy,inputs$lphy,depth=2776.039,sst=inputs$sst)
+inputs$er=getExportRatio(inputs$sphy,inputs$lphy,depth=2776.039,sst=inputs$sst)
 
 inputs$depth<-2776.039
 
@@ -83,27 +84,50 @@ inputs$depth<-2776.039
 
 # if below does not run, work with pre-processed weekly inputs for a single grid  cell
 
-inputs <- readRDS("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/historical/grid_10895_IPSL-CM6A-LR_historical.rds")
+# inputs <- readRDS("/homevol/julia/../../rd/gem/private/fishmip_inputs/ISIMIP3b/IPSL-CM6A-LR/historical/grid_10895_IPSL-CM6A-LR_historical.rds")
+
+# get annual means
+# first year for spin up
+inputs_yr1<-inputs %>% filter(year==1850) %>% summarise_at(vars(lon:depth),mean)
+# repeat to keep create burn in of 100 yrs* time steps per year
+inputs_yr1<-as.data.frame(lapply(inputs_yr, rep, 12*100))
+
+#annual means
+inputs_yr<-inputs%>% 
+group_by(year) %>% 
+  mutate(across(lphy:depth, mean)) %>%
+  ungroup
+
+inputs_yr<-inputs_yr1
+
+
+# revert back to full time series
+# inputs_yr<-inputs - need to smooth these or add a burn.in
 
 ## Set up params 
-    params <- sizeparam(equilibrium = TRUE
+params <- sizeparam(equilibrium = FALSE
                         ,dx = 0.1
                         ,xmin.consumer.u = -3
                         ,xmin.consumer.v = -3
-                        ,tmax = dim(inputs$ts)[1]/48
-                        ,tstepspryr  =  48
+                        ,tmax = dim(inputs_yr)[1]/12
+                        #,tmax = dim(inputs$ts)[1]/48
+                        ,tstepspryr  =  12
                         ,fmort.u = 0.0
                         ,fminx.u = 0
                         ,fmort.v = 0.0
                         ,fminx.v = -1
-                        ,depth = inputs$depth$depth
-                        ,er = inputs$ts$er
-                        ,pp = inputs$ts$intercept
-                        ,slope = inputs$ts$slope
-                        ,sst = inputs$ts$sst
-                        ,sft = inputs$ts$sbt
-                        ,lat = inputs$depth$lat
-                        ,lon = inputs$depth$lon
+                        #,depth = inputs$depth$depth
+                        ,depth = unique(inputs_yr$depth)
+                        #,er = inputs$ts$er
+                        ,er = inputs_yr$er
+                        #,pp = inputs$ts$intercept
+                         ,pp = inputs_yr$intercept
+                        #,slope = inputs$ts$slope
+                         ,slope = inputs_yr$slope
+                        ,sst = inputs_yr$sst
+                        ,sft = inputs_yr$sbt
+                        ,lat = unique(inputs_yr$lat)
+                        ,lon = unique(inputs_yr$lon)
                         ,use.init = FALSE
                         ,U.initial = NA 
                         ,V.initial = NA  
@@ -117,7 +141,7 @@ result_set <- sizemodel(params  =params
                             ,W_mat = NULL
                             ,temp.effect = TRUE
                             ,use.init = FALSE
-                            ,burnin.len = 300*48, aggregated=T) 
+                            ,burnin.len = 100*12) 
   
 result_set$notrun <- ifelse(any(result_set$U[150,]=="NaN")==FALSE, FALSE, TRUE)
 
@@ -134,7 +158,6 @@ result_set$notrun <- ifelse(any(result_set$U[150,]=="NaN")==FALSE, FALSE, TRUE)
 
 # PLOT SIZE SPECTRUM AT FINAL TIME STEP
 plotsizespectrum(result_set,params)
-
 
 # SUMMARISE "aggregated" output variables for FishMIP - should be wrapped into a function
 

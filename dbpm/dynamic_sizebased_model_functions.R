@@ -244,25 +244,7 @@ sizemodel<-function(params,ERSEM.det.input=F,U_mat,V_mat,W_mat,temp.effect=T,eps
     # check all places inn the code where fishing related dynamics/outputs are specified 
     # check mizer-fleet and move those bits where appropriate 
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+  
     
     #iteration over time, N [days]
     
@@ -297,11 +279,11 @@ sizemodel<-function(params,ERSEM.det.input=F,U_mat,V_mat,W_mat,temp.effect=T,eps
       #     Y.u[,Neq]<-Y.u[,i-1]
       #     Y.v[,Neq]<-Y.v[,i-1]
       #     W[Neq]<-W[i-1]
-      #     return(list(U=U[,],GG.u=GG.u[,],PM.u=PM.u[,],V=V[,],GG.v=GG.v[,],PM.v=PM.v[,],Y.u=Y.u[,],Y.v=Y.v[,],W=W[], params=params))	
+      #     return(list(U=U[,],GG.u=GG.u[,],PM.u=PM.u[,],V=V[,],GG.v=GG.v[,],PM.v=PM.v[,],Y.u=Y.u[,],Y.v=Y.v[,],W=W[], params=params))
       #   }
       # }
       # 
-      
+
       #--------------------------------
       # Calculate Growth and Mortality
       #--------------------------------
